@@ -1,0 +1,1 @@
+These are the GCP aips that need to be enabled in each environment.
