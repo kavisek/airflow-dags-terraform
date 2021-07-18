@@ -8,13 +8,13 @@ module "api" {
   project = var.project
 }
 
-# module "vpc" {
-#   source  = "../modules/vpc"
-#   project = var.project
-#   env     = var.env
-#   app     = var.app
-#   region  = var.region
-# }
+module "vpc" {
+  source  = "../modules/vpc"
+  project = var.project
+  env     = var.env
+  app     = var.app
+  region  = var.region
+}
 
 # module "serverless_vpc_access_connectors" {
 #   source       = "../modules/serverless_vpc_access_connectors"
@@ -23,11 +23,11 @@ module "api" {
 #   region       = var.region
 # }
 
-# module "firewall" {
-#   source       = "../modules/firewall"
-#   project      = var.project
-#   network_name = module.vpc.network_name
-# }
+module "firewall" {
+  source       = "../modules/firewall"
+  project      = var.project
+  network_name = module.vpc.network_name
+}
 
 # module "buckets" {
 #   source  = "../modules/buckets"
