@@ -81,7 +81,9 @@ module "gke" {
       "all-node-example",
     ]
     airflow-pool = [
-      "airflow-pool-example",
+      "${var.network}-allow-ssh-rdp",
+      "${var.network}-allow-ingress-from-iap",
+      "${var.network}-allow-http",
     ]
   }
 }

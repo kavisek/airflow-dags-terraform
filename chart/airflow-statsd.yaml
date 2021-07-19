@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: airflow
+    meta.helm.sh/release-namespace: airflow
+  creationTimestamp: "2021-07-19T04:33:44Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    chart: airflow-1.0.0
+    component: statsd
+    heritage: Helm
+    release: airflow
+    tier: airflow
+  name: airflow-statsd
+  namespace: airflow
+  resourceVersion: "45175"
+  uid: d5217114-102b-4c36-8cd4-8aad46081f3b
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      component: statsd
+      release: airflow
+      tier: airflow
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        component: statsd
+        release: airflow
+        tier: airflow
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - --statsd.mapping-config=/etc/statsd-exporter/mappings.yml
+        image: apache/airflow:airflow-statsd-exporter-2021.04.28-v0.17.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /metrics
+            port: 9102
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: statsd
+        ports:
+        - containerPort: 9125
+          name: statsd-ingest
+          protocol: UDP
+        - containerPort: 9102
+          name: statsd-scrape
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /metrics
+            port: 9102
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsUser: 65534
+      serviceAccount: airflow-statsd
+      serviceAccountName: airflow-statsd
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2021-07-19T04:34:12Z"
+    lastUpdateTime: "2021-07-19T04:34:12Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2021-07-19T04:33:44Z"
+    lastUpdateTime: "2021-07-19T04:34:12Z"
+    message: ReplicaSet "airflow-statsd-84f4f9898" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

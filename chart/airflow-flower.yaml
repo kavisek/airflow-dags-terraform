@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/airflow-config: 49829ef2b4f6bef983fc2697afc7b57caf2a4842672ea59d2e2da63e1cf7f8ce
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: airflow
+    meta.helm.sh/release-namespace: airflow
+  creationTimestamp: "2021-07-19T04:33:44Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    chart: airflow-1.0.0
+    component: flower
+    heritage: Helm
+    release: airflow
+    tier: airflow
+  name: airflow-flower
+  namespace: airflow
+  resourceVersion: "45516"
+  uid: 4700ca28-a131-4e18-8904-aecb68dbd513
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      component: flower
+      release: airflow
+      tier: airflow
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        component: flower
+        release: airflow
+        tier: airflow
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - bash
+        - -c
+        - airflow celery flower
+        env:
+        - name: AIRFLOW__CORE__FERNET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: fernet-key
+              name: airflow-fernet-key
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-metadata
+        - name: AIRFLOW_CONN_AIRFLOW_DB
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-metadata
+        - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-result-backend
+        - name: AIRFLOW__CELERY__RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-result-backend
+        - name: AIRFLOW__CELERY__BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-broker-url
+        image: apache/airflow:2.0.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:5555
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: flower
+        ports:
+        - containerPort: 5555
+          name: flower-ui
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:5555
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /opt/airflow/airflow.cfg
+          name: config
+          readOnly: true
+          subPath: airflow.cfg
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsUser: 50000
+      serviceAccount: airflow-flower
+      serviceAccountName: airflow-flower
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: airflow-airflow-config
+        name: config
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2021-07-19T04:35:02Z"
+    lastUpdateTime: "2021-07-19T04:35:02Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2021-07-19T04:33:44Z"
+    lastUpdateTime: "2021-07-19T04:35:02Z"
+    message: ReplicaSet "airflow-flower-75fc944d4d" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

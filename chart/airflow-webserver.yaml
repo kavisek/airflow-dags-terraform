@@ -1,0 +1,230 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: airflow
+    meta.helm.sh/release-namespace: airflow
+  creationTimestamp: "2021-07-19T04:33:44Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    chart: airflow-1.0.0
+    component: webserver
+    heritage: Helm
+    release: airflow
+    tier: airflow
+  name: airflow-webserver
+  namespace: airflow
+  resourceVersion: "44981"
+  uid: 8d1fbe94-d048-4196-9ba6-1a5dc3d6a91d
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      component: webserver
+      release: airflow
+      tier: airflow
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/airflow-config: 49829ef2b4f6bef983fc2697afc7b57caf2a4842672ea59d2e2da63e1cf7f8ce
+        checksum/extra-configmaps: 2e44e493035e2f6a255d08f8104087ff10d30aef6f63176f1b18f75f73295598
+        checksum/extra-secrets: bb91ef06ddc31c0c5a29973832163d8b0b597812a793ef911d33b622bc9d1655
+        checksum/metadata-secret: dcbb26b06a9d686bf5fedceff6d4024447053fded58a37271cdfef14f8c8c800
+        checksum/pgbouncer-config-secret: da52bd1edfe820f0ddfacdebb20a4cc6407d296ee45bcb500a6407e2261a5ba2
+        checksum/webserver-config: 4a2281a4e3ed0cc5e89f07aba3c1bb314ea51c17cb5d2b41e9b045054a6b5c72
+      creationTimestamp: null
+      labels:
+        component: webserver
+        release: airflow
+        tier: airflow
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - bash
+        - -c
+        - exec airflow webserver
+        env:
+        - name: AIRFLOW__CORE__FERNET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: fernet-key
+              name: airflow-fernet-key
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-metadata
+        - name: AIRFLOW_CONN_AIRFLOW_DB
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-metadata
+        - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-result-backend
+        - name: AIRFLOW__CELERY__RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-result-backend
+        - name: AIRFLOW__CELERY__BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-broker-url
+        image: apache/airflow:2.0.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 30
+        name: webserver
+        ports:
+        - containerPort: 8080
+          name: webserver-ui
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 30
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /opt/airflow/airflow.cfg
+          name: config
+          readOnly: true
+          subPath: airflow.cfg
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - python
+        - -c
+        - |
+          import airflow
+          import logging
+          import os
+          import time
+
+          from alembic.config import Config
+          from alembic.runtime.migration import MigrationContext
+          from alembic.script import ScriptDirectory
+
+          from airflow import settings
+
+          package_dir = os.path.abspath(os.path.dirname(airflow.__file__))
+          directory = os.path.join(package_dir, 'migrations')
+          config = Config(os.path.join(package_dir, 'alembic.ini'))
+          config.set_main_option('script_location', directory)
+          config.set_main_option('sqlalchemy.url', settings.SQL_ALCHEMY_CONN.replace('%', '%%'))
+          script_ = ScriptDirectory.from_config(config)
+
+          timeout=60
+
+          with settings.engine.connect() as connection:
+              context = MigrationContext.configure(connection)
+              ticker = 0
+              while True:
+                  source_heads = set(script_.get_heads())
+
+                  db_heads = set(context.get_current_heads())
+                  if source_heads == db_heads:
+                      break
+
+                  if ticker >= timeout:
+                      raise TimeoutError("There are still unapplied migrations after {} seconds.".format(ticker))
+                  ticker += 1
+                  time.sleep(1)
+                  logging.info('Waiting for migrations... %s second(s)', ticker)
+        env:
+        - name: AIRFLOW__CORE__FERNET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: fernet-key
+              name: airflow-fernet-key
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-metadata
+        - name: AIRFLOW_CONN_AIRFLOW_DB
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-metadata
+        - name: AIRFLOW__CELERY__CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-result-backend
+        - name: AIRFLOW__CELERY__RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-airflow-result-backend
+        - name: AIRFLOW__CELERY__BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              key: connection
+              name: airflow-broker-url
+        image: apache/airflow:2.0.2
+        imagePullPolicy: IfNotPresent
+        name: wait-for-airflow-migrations
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 0
+        runAsUser: 50000
+      serviceAccount: airflow-webserver
+      serviceAccountName: airflow-webserver
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: airflow-airflow-config
+        name: config
+status:
+  conditions:
+  - lastTransitionTime: "2021-07-19T04:33:44Z"
+    lastUpdateTime: "2021-07-19T04:33:44Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  - lastTransitionTime: "2021-07-19T04:33:44Z"
+    lastUpdateTime: "2021-07-19T04:33:45Z"
+    message: ReplicaSet "airflow-webserver-57c4c6c7b7" is progressing.
+    reason: ReplicaSetUpdated
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  replicas: 1
+  unavailableReplicas: 1
+  updatedReplicas: 1
