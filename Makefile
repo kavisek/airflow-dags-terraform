@@ -25,6 +25,10 @@ create_namespace:
 operations:
 	watch -n 30 gcloud container operations list
 
+
+ssh:
+	kubectl exec --stdin --tty operator-score-card-fro-3d786e99 -- /bin/bash
+	
 extract:
 	kubectl get deployment.apps/airflow-webserver -n airflow -o yaml > ./chart/airflow-webserver.yaml
 	kubectl get deployment.apps/airflow-flower -n airflow -o yaml > ./chart/airflow-flower.yaml

@@ -26,7 +26,7 @@ module "gke" {
   node_pools = [
     {
       name                      = "airflow-pool"
-      machine_type              = "e2-small"
+      machine_type              = "e2-standard-2"
       node_locations            = var.zone
       min_count                 = 1
       initial_node_count        = 1
