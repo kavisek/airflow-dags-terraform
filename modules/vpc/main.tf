@@ -5,17 +5,17 @@ module "vpc" {
   version = "~> 3.0"
 
   project_id   = var.project
-  network_name = "${var.env}-${var.app}-vpc"
+  network_name = "${var.app}-vpc"
   routing_mode = "GLOBAL"
 
   subnets = [
     {
-      subnet_name   = "${var.env}-${var.app}-${var.region}-subnet-01"
+      subnet_name   = "${var.app}-${var.region}-subnet-01"
       subnet_ip     = "10.10.10.0/24"
       subnet_region = var.region
     },
     {
-      subnet_name           = "${var.env}-${var.app}-${var.region}-subnet-02"
+      subnet_name           = "${var.app}-${var.region}-subnet-02"
       subnet_ip             = "10.10.20.0/24"
       subnet_region         = var.region
       subnet_private_access = "true"
@@ -23,7 +23,7 @@ module "vpc" {
       description           = "[subnet description]"
     },
     {
-      subnet_name               = "${var.env}-${var.app}-${var.region}-subnet-03"
+      subnet_name               = "${var.app}-${var.region}-subnet-03"
       subnet_ip                 = "10.10.30.0/24"
       subnet_region             = var.region
       subnet_flow_logs          = "true"
@@ -34,14 +34,16 @@ module "vpc" {
   ]
 
   secondary_ranges = {
-    subnet-01 = [
+    "${var.app}-${var.region}-subnet-01" = [
       {
-        range_name    = "${var.env}-${var.app}-${var.region}-subnet-01-secondary-01"
-        ip_cidr_range = "192.168.64.0/24"
+        range_name    =  "${var.app}-${var.region}-subnet-01-pod-range"
+        ip_cidr_range = "192.168.0.0/18"
+      },
+      {
+        range_name    = "${var.app}-${var.region}-subnet-01-service-range"
+        ip_cidr_range = "192.168.64.0/18"
       },
     ]
-
-    subnet-02 = []
   }
 
   routes = [
@@ -61,11 +63,11 @@ resource "google_compute_global_address" "private_ip_alloc" {
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
-  network       = "${var.env}-${var.app}-vpc"
+  network       = "${var.app}-vpc"
 }
 
 resource "google_service_networking_connection" "foobar" {
-  network                 = "${var.env}-${var.app}-vpc"
+  network                 = "${var.app}-vpc"
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip_alloc.name]
 }

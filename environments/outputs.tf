@@ -1,3 +1,7 @@
+output "application_service_account" {
+  value = module.iam.application_service_account
+}
+
 # output "network_name" {
 #   value = module.vpc.network_name
 # }

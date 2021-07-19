@@ -8,6 +8,13 @@ module "api" {
   project = var.project
 }
 
+
+module "iam" {
+  source  = "../modules/iam"
+  project = var.project
+  app     = var.app
+}
+
 module "vpc" {
   source  = "../modules/vpc"
   project = var.project
@@ -29,13 +36,23 @@ module "firewall" {
   network_name = module.vpc.network_name
 }
 
+module "kubernetes" {
+  source  = "../modules/kubernetes"
+  project = var.project
+  app     = var.app
+  region  = var.region
+  zone  = var.zone 
+  network  = module.vpc.network_name
+  subnet  = module.vpc.subnet
+  service_account = module.iam.service_account
+}
+
 # module "buckets" {
 #   source  = "../modules/buckets"
 #   project = var.project
 #   env     = var.env
 #   app     = var.app
 #   region  = var.region
-
 # }
 
 # module "vms" {

@@ -9,6 +9,7 @@ locals {
     "clouddebugger.googleapis.com",
     "cloudtrace.googleapis.com",
     "compute.googleapis.com",
+    "container.googleapis.com",
     "containerregistry.googleapis.com",
     "datastore.googleapis.com",
     "deploymentmanager.googleapis.com",
