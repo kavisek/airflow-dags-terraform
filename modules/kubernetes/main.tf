@@ -16,16 +16,19 @@ module "gke" {
   subnetwork                 = var.subnet
   ip_range_pods              = "${var.app}-${var.region}-subnet-01-pod-range"
   ip_range_services          = "${var.app}-${var.region}-subnet-01-service-range"
+  create_service_account     = false
+  remove_default_node_pool   = true
   http_load_balancing        = false
   horizontal_pod_autoscaling = true
   network_policy             = false
 
   node_pools = [
     {
-      name                      = "default-node-pool"
+      name                      = "airflow-pool"
       machine_type              = "e2-small"
       node_locations            = var.zone
       min_count                 = 1
+      initial_node_count        = 1
       max_count                 = 10
       local_ssd_count           = 0
       disk_size_gb              = 10
@@ -35,7 +38,6 @@ module "gke" {
       auto_upgrade              = true
       service_account           = var.service_account
       preemptible               = false
-      initial_node_count        = 80
     },
   ]
 
@@ -48,38 +50,37 @@ module "gke" {
   }
 
   node_pools_labels = {
-    all = {}
-
-    default-node-pool = {
-      default-node-pool = true
+    all = {
+      all-pools-example = true
+    }
+    airflow-pool = {
+      airflow-pool-example = true
     }
   }
 
-  node_pools_metadata = {
-    all = {}
-
-    default-node-pool = {
-      node-pool-metadata-custom-value = "my-node-pool"
-    }
+  node_pools_taints = {
+    all = [
+      {
+        key    = "all-pools-example"
+        value  = true
+        effect = "PREFER_NO_SCHEDULE"
+      },
+    ]
+    airflow-pool = [
+      {
+        key    = "airflow-pool-example"
+        value  = true
+        effect = "PREFER_NO_SCHEDULE"
+      },
+    ]
   }
 
-  # node_pools_taints = {
-  #   all = []
-
-  #   default-node-pool = [
-  #     {
-  #       key    = "default-node-pool"
-  #       value  = true
-  #       effect = "PREFER_NO_SCHEDULE"
-  #     },
-  #   ]
-  # }
-
-  # node_pools_tags = {
-  #   all = []
-
-  #   default-node-pool = [
-  #     "default-node-pool",
-  #   ]
-  # }
+  node_pools_tags = {
+    all = [
+      "all-node-example",
+    ]
+    airflow-pool = [
+      "airflow-pool-example",
+    ]
+  }
 }
