@@ -10,6 +10,7 @@ module "gke" {
   source                     = "terraform-google-modules/kubernetes-engine/google"
   project_id                 = var.project
   name                       = "airflow-cluster"
+  regional                   = false
   region                     = var.region
   zones                      = [var.zone]
   network                    = var.network
@@ -44,7 +45,7 @@ module "gke" {
   node_pools_oauth_scopes = {
     all = []
 
-    default-node-pool = [
+    airflow-pool = [
       "https://www.googleapis.com/auth/cloud-platform",
     ]
   }
