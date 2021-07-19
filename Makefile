@@ -17,6 +17,13 @@ deploy:
 	helm repo add apache-airflow https://airflow.apache.org
 	helm install airflow apache-airflow/airflow --namespace airflow
 
+operations:
+	 gcloud container operations list
+
 watch:
 	# Refresh this view every 10 seconds.
 	watch -n 10 kubectl get po,svc,deployment -A
+
+forward:
+	# Port forward the gcloud.
+	kubectl port-forward service/airflow-webserver 8080:8080 -n airflow

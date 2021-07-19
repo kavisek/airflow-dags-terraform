@@ -33,7 +33,7 @@ module "vpc" {
 module "firewall" {
   source       = "../modules/firewall"
   project      = var.project
-  network_name = module.vpc.network_name
+  network = module.vpc.network_name
 }
 
 module "kubernetes" {

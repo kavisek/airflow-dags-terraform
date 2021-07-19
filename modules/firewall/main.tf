@@ -1,6 +1,6 @@
 resource "google_compute_firewall" "allow-http" {
-  name    = "${var.network_name}-allow-http"
-  network = var.network_name
+  name    = "${var.network}-allow-http"
+  network = var.network
   project = var.project
 
   allow {
@@ -14,8 +14,8 @@ resource "google_compute_firewall" "allow-http" {
 
 # IAP: identity aware proxy firewall rule.
 resource "google_compute_firewall" "allow-ingress-from-iap" {
-  name    = "${var.network_name}-allow-ingress-from-iap"
-  network = var.network_name
+  name    = "${var.network}-allow-ingress-from-iap"
+  network = var.network
   project = var.project
 
   direction = "INGRESS"
@@ -36,15 +36,15 @@ resource "google_compute_firewall" "allow-ingress-from-iap" {
 
 # Temp Solution for Developers (i.e Kavi, this should be removed)
 resource "google_compute_firewall" "allow-ssh-rdp" {
-  name    = "${var.network_name}-allow-ssh-rdp"
-  network = var.network_name
+  name    = "${var.network}-allow-ssh-rdp"
+  network = var.network
   project = var.project
 
   direction = "INGRESS"
   priority  = 1000
 
   # Cloud IAP's TCP forwarding netblock
-  target_tags   = ["${var.network_name}-allow-ssh-rdp"]
+  target_tags   = ["${var.network}-allow-ssh-rdp"]
   source_ranges = ["0.0.0.0/0"]
   allow {
     protocol = "tcp"
