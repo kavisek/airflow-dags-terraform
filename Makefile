@@ -27,7 +27,7 @@ operations:
 
 
 ssh:
-	kubectl exec --stdin --tty operator-score-card-fro-3d786e99 -- /bin/bash
+	kubectl exec --stdin --tty [pod] -- /bin/bash
 	
 extract:
 	kubectl get deployment.apps/airflow-webserver -n airflow -o yaml > ./chart/airflow-webserver.yaml
